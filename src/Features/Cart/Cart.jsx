@@ -26,10 +26,12 @@ const fakeCart = [
 
 function Cart() {
   const cart = fakeCart;
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  console.log("%cCart page loaded 🍕","color: green; font-size: 14px; font-weight: bold");
 
   return (
     <div>
-      <Link to="/menu">&larr; Back to menu</Link>
+      <Link to="/menuu">&larr; Back to menu</Link>
 
       <h2>Your cart, %NAME%</h2>
 
