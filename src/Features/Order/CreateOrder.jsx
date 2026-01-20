@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Form, redirect, useActionData, useNavigation } from "react-router-dom";
+import { createOrder } from "../../Services/apiRestaurant";
 
 // https://uibakery.io/regex-library/phone-number
 const isValidPhone = (str) =>
@@ -31,6 +33,9 @@ const fakeCart = [
 ];
 
 function CreateOrder() {
+  const navigation =useNavigation();
+  const isSubmitting=navigation.state==='submitting'
+ const formErrors=useActionData();
   // const [withPriority, setWithPriority] = useState(false);
   const cart = fakeCart;
 
@@ -38,28 +43,33 @@ function CreateOrder() {
     <div>
       <h2>Ready to order? Let's go!</h2>
 
-      <form>
+      <Form method="POST">
         <div>
           <label>First Name</label>
-          <input type="text" name="customer" required />
+          <input type="text" name="customer" required  className="input"/>
         </div>
 
         <div>
           <label>Phone number</label>
           <div>
-            <input type="tel" name="phone" required />
+            <input type="tel" name="phone" required className="input" />
           </div>
+          {formErrors?.phone && <p>{formErrors.phone}</p>}
         </div>
 
         <div>
           <label>Address</label>
           <div>
-            <input type="text" name="address" required />
+            <input type="text" name="address" required className="input"/>
           </div>
         </div>
 
         <div>
           <input
+          className="h-6 w-6 accent-yellow-400
+          focus:outline-none focus:ring focus:ring-yellow-400
+          focus:ring-offset-2
+          "
             type="checkbox"
             name="priority"
             id="priority"
@@ -70,11 +80,34 @@ function CreateOrder() {
         </div>
 
         <div>
-          <button>Order now</button>
+          <button disabled={isSubmitting} className="bg-yellow-400 uppercase font-semibold
+           text-stone-800 py-3 px-4 inline 
+           tracking-wide rounded-full
+            hover:bg-yellow-300 transition-colors
+             duration-300
+             focus:outline-none focus:ring focus:ring-yellow-300 focus:ring-offset-2
+             disabled:cursor-not-allowed
+             ">{isSubmitting ?'Placing Order' : 'Order now'}</button>
         </div>
-      </form>
+        <input type="hidden" name="cart" value={JSON.stringify(cart)}/>
+      </Form>
     </div>
   );
 }
-
+export async function action ({request}){
+const formData =await request.formData();
+const data= Object.fromEntries(formData);
+console.log(data)
+const order ={
+  ...data,
+  cart:JSON.parse(data.cart),
+  priority:data.priority==='on'
+}
+console.log(order);
+const errors={}
+if(!isValidPhone(order.phone)) errors.phone ='please give us your correct phone number';
+if (Object.keys(errors).length>0) return errors;
+const newOrder= await createOrder(order);
+return redirect(`/order/${newOrder.id}`);
+}
 export default CreateOrder;
